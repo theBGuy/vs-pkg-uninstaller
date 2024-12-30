@@ -2,7 +2,7 @@
   "name": "pkguninstaller",
   "displayName": "Pkg-Uninstaller",
   "description": "Quickly uninstall packages from your package.json using the context menu.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.96.0"
   },
