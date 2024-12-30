@@ -1,71 +1,62 @@
-# quickuninstall README
+# Pkg-Uninstaller
 
-This is the README for your extension "pkguninstaller". After writing up a brief description, we recommend including the following sections.
+**Pkg-Uninstaller** is a lightweight and efficient VS Code extension that allows you to easily uninstall packages directly from your `package.json` file using the context menu. Simply select the package you want to remove, and uninstall it with a single click. Perfect for developers who want to quickly manage their dependencies without leaving the editor.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Uninstall Multiple Packages**: Select and uninstall multiple packages at once from your `package.json`.
+- **Quick and Easy**: No need to run terminal commands. Just right-click on the package name in your `package.json` and uninstall it directly.
+- **Support for Multiple Package Managers**: Currently supports npm, yarn, and pnpm, making it versatile for any project setup.
+- **Context Menu Integration**: Seamlessly integrates into the editor's context menu for easy access while working in your `package.json`.
 
-For example if there is an image subfolder under your extension project workspace:
+## Installation
 
-\!\[feature X\]\(images/feature-x.png\)
+1. Open VS Code.
+2. Go to the Extensions view (`Ctrl+Shift+X`).
+3. Search for `Pkg-Uninstaller` and click **Install**.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Alternatively, you can install it via the [Marketplace](https://marketplace.visualstudio.com/) by searching for `Pkg-Uninstaller`.
 
-## Requirements
+## Usage
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+1. Open your `package.json` file in VS Code.
+2. Right-click on the package name (or dependencies) you want to uninstall in the editor.
+3. Select **Uninstall Packages** from the context menu.
+4. If multiple packages are selected, they will all be uninstalled at once.
 
-## Extension Settings
+## Supported Package Managers
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+- **npm**
+- **yarn**
+- **pnpm**
 
-For example:
+The extension automatically detects which package manager you're using based on your project's `package.json`.
 
-This extension contributes the following settings:
+## Commands
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+- **Uninstall Packages**: Right-click any installed package in the `package.json` and choose this option to uninstall it.
 
-## Known Issues
+## Development
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+To contribute to **Pkg-Uninstaller**, clone this repository and follow these steps:
 
-## Release Notes
+1. Clone the repo:
+   ```bash
+   git clone https://github.com/your-username/pkg-uninstaller.git
+   ```
 
-Users appreciate release notes as you update your extension.
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+3. Compile the TypeScript code:
+    ```bash
+    npm run compile
+    ```
+4. Test your changes:
+    ```bash
+    npm test
+    ```
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+## License
+This extension is licensed under the MIT License. See the LICENSE file for more details.

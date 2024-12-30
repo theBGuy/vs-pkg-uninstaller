@@ -45,7 +45,7 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vscode-test",
-    "deploy": "vsce publish --yarn",
+    "deploy": "vsce publish",
     "release": "release-it"
   },
   "devDependencies": {
