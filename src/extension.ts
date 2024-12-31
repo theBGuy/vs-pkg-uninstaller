@@ -1,34 +1,20 @@
-// // The module 'vscode' contains the VS Code extensibility API
-// // Import the module and reference it with the alias vscode in your code below
-// import * as vscode from 'vscode';
-
-// // This method is called when your extension is activated
-// // Your extension is activated the very first time the command is executed
-// export function activate(context: vscode.ExtensionContext) {
-
-// 	// Use the console to output diagnostic information (console.log) and errors (console.error)
-// 	// This line of code will only be executed once when your extension is activated
-// 	console.log('Congratulations, your extension "quickuninstall" is now active!');
-
-// 	// The command has been defined in the package.json file
-// 	// Now provide the implementation of the command with registerCommand
-// 	// The commandId parameter must match the command field in package.json
-// 	const disposable = vscode.commands.registerCommand('quickuninstall.helloWorld', () => {
-// 		// The code you place here will be executed every time your command is executed
-// 		// Display a message box to the user
-// 		vscode.window.showInformationMessage('Hello World from QuickUninstall!');
-// 	});
-
-// 	context.subscriptions.push(disposable);
-// }
-
-// // This method is called when your extension is deactivated
-// export function deactivate() {}
-
 import * as vscode from "vscode";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { exec } from "node:child_process";
+
+interface PackageJson {
+  name?: string;
+  version?: string;
+  description?: string;
+  main?: string;
+  scripts?: { [key: string]: string };
+  dependencies?: { [key: string]: string };
+  devDependencies?: { [key: string]: string };
+  peerDependencies?: { [key: string]: string };
+  optionalDependencies?: { [key: string]: string };
+  [key: string]: unknown;
+}
 
 function detectPackageManager(workspaceFolder: string): "npm" | "yarn" | "pnpm" {
   if (fs.existsSync(path.join(workspaceFolder, "yarn.lock"))) {
@@ -55,12 +41,16 @@ export function activate(context: vscode.ExtensionContext) {
       const fileContent = fs.readFileSync(filePath, "utf8");
 
       try {
-        const packageJson = JSON.parse(fileContent);
+        const packageJson: PackageJson = JSON.parse(fileContent);
         const dependencies = Object.keys(packageJson.dependencies || {});
         const devDependencies = Object.keys(packageJson.devDependencies || {});
+        const optionalDependencies = Object.keys(packageJson.optionalDependencies || {});
+        const peerDependencies = Object.keys(packageJson.peerDependencies || {});
         const allPackages = [
           ...dependencies.map(pkg => `dependency: ${pkg}`),
           ...devDependencies.map(pkg => `devDependency: ${pkg}`),
+          ...optionalDependencies.map(pkg => `optionalDependency: ${pkg}`),
+          ...peerDependencies.map(pkg => `peerDependency: ${pkg}`),
         ];
 
         if (allPackages.length === 0) {
