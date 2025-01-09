@@ -1,4 +1,6 @@
 # Pkg-Uninstaller
+![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/theBGuy.pkguninstaller)
+
 
 **Pkg-Uninstaller** is a lightweight and efficient VS Code extension that allows you to easily uninstall packages directly from your `package.json` file using the context menu. Simply select the package you want to remove, and uninstall it with a single click. Perfect for developers who want to quickly manage their dependencies without leaving the editor.
 
