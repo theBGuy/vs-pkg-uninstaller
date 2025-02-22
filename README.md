@@ -31,6 +31,7 @@ Alternatively, you can install it via the [Marketplace](https://marketplace.visu
 - **npm**
 - **yarn**
 - **pnpm**
+- **bun**
 
 The extension automatically detects which package manager you're using based on your project's `package.json`.
 
