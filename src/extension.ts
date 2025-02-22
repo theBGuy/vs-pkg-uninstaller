@@ -18,7 +18,7 @@ interface PackageJson {
   [key: string]: unknown;
 }
 
-function detectPackageManager(workspaceFolder: string): "npm" | "yarn" | "pnpm" | undefined {
+function detectPackageManager(workspaceFolder: string): "npm" | "yarn" | "pnpm" | "bun" | undefined {
   if (fs.existsSync(path.join(workspaceFolder, "yarn.lock"))) {
     return "yarn";
   }
@@ -27,6 +27,12 @@ function detectPackageManager(workspaceFolder: string): "npm" | "yarn" | "pnpm" 
   }
   if (fs.existsSync(path.join(workspaceFolder, "package-lock.json"))) {
     return "npm";
+  }
+  if (fs.existsSync(path.join(workspaceFolder, "bun.lock"))) {
+    return "bun";
+  }
+  if (fs.existsSync(path.join(workspaceFolder, "bun.lockb"))) {
+    return "bun";
   }
   return undefined;
 }
@@ -107,24 +113,33 @@ export function activate(context: vscode.ExtensionContext) {
               ? "yarn remove"
               : packageManager === "pnpm"
               ? "pnpm remove"
+              : packageManager === "bun"
+              ? "bun remove"
               : "npm uninstall";
+        
+        await vscode.window.withProgress({
+          location: vscode.ProgressLocation.Notification,
+          title: "Uninstalling packages",
+          cancellable: false
+        }, async (progress) => {
+          for (const [index, packageName] of packageNames.entries()) {
+            const uninstallCommand = `${managerRemoveCmd} ${packageName}`;
 
-        for (const packageName of packageNames) {
-          const uninstallCommand = `${managerRemoveCmd} ${packageName}`;
-
-          await new Promise<void>((resolve, reject) => {
-            // 2/21/2025 - hacky workaround for monorepos
-            exec(uninstallCommand, { cwd: monorepo ? cwd : workspaceFolder }, (err, stdout, stderr) => {
-              if (err) {
-                vscode.window.showErrorMessage(`Error uninstalling ${packageName}: ${stderr}`);
-                reject(err);
-              } else {
-                vscode.window.showInformationMessage(`${packageName} uninstalled successfully.`);
-                resolve();
-              }
+            await new Promise<void>((resolve, reject) => {
+              exec(uninstallCommand, { cwd: monorepo ? cwd : workspaceFolder }, (err, stdout, stderr) => {
+                if (err) {
+                  vscode.window.showErrorMessage(`Error uninstalling ${packageName}: ${stderr}`);
+                  reject(err);
+                } else {
+                  progress.report({ increment: (index + 1) * (100 / packageNames.length), message: `Uninstalled ${packageName}` });
+                  resolve();
+                }
+              });
             });
-          });
-        }
+          }
+        });
+
+        vscode.window.showInformationMessage("Selected packages uninstalled successfully.");
       } catch (error) {
         console.error(error);
         vscode.window.showErrorMessage("Error parsing package.json.");
