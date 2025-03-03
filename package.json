@@ -6,20 +6,29 @@
   "engines": {
     "vscode": "^1.96.0"
   },
-  "categories": [
-    "Programming Languages",
-    "Linters"
-  ],
-  "activationEvents": [
-    "onLanguage:json",
-    "onStartupFinished"
-  ],
+  "categories": ["Programming Languages", "Linters"],
+  "activationEvents": ["onLanguage:json", "onStartupFinished"],
   "main": "./dist/extension.js",
   "contributes": {
     "menus": {
+      "commandPalette": [
+        {
+          "command": "extension.uninstallPackageFromContext",
+          "when": "false"
+        },
+        {
+          "command": "extension.uninstallPackages",
+          "when": "resourceLangId == json && editorLangId == json"
+        }
+      ],
       "editor/context": [
         {
-          "command": "extension.uninstallPackage",
+          "command": "extension.uninstallPackageFromContext",
+          "when": "resourceLangId == json && editorLangId == json",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.uninstallPackages",
           "when": "resourceLangId == json && editorLangId == json",
           "group": "navigation"
         }
@@ -27,8 +36,14 @@
     },
     "commands": [
       {
-        "command": "extension.uninstallPackage",
-        "title": "Uninstall Packages"
+        "command": "extension.uninstallPackageFromContext",
+        "title": "Uninstall Package",
+        "category": "Pkg-Uninstaller"
+      },
+      {
+        "command": "extension.uninstallPackages",
+        "title": "Uninstall Packages",
+        "category": "Pkg-Uninstaller"
       }
     ]
   },
@@ -43,35 +58,25 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
-    "lint": "eslint src",
+    "lint": "biome check --write ./src/",
     "test": "vscode-test",
     "deploy": "vsce publish",
     "release": "release-it"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.96.0",
-    "@typescript-eslint/eslint-plugin": "^8.17.0",
-    "@typescript-eslint/parser": "^8.17.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.25.0",
-    "eslint": "^9.16.0",
     "npm-run-all": "^4.1.5",
     "release-it": "^17.11.0",
     "typescript": "^5.7.2"
   },
-  "keywords": [
-    "uninstall",
-    "npm",
-    "packages",
-    "yarn",
-    "pnpm",
-    "package.json",
-    "dependencies"
-  ],
+  "keywords": ["uninstall", "npm", "packages", "yarn", "pnpm", "bun", "package.json", "dependencies", "utility"],
   "repository": {
     "type": "git",
     "url": "https://github.com/theBGuy/vs-pkg-uninstaller"
