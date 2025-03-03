@@ -19,7 +19,12 @@
     "menus": {
       "editor/context": [
         {
-          "command": "extension.uninstallPackage",
+          "command": "extension.uninstallPackageFromContext",
+          "when": "resourceLangId == json && editorLangId == json",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.uninstallPackages",
           "when": "resourceLangId == json && editorLangId == json",
           "group": "navigation"
         }
@@ -27,7 +32,11 @@
     },
     "commands": [
       {
-        "command": "extension.uninstallPackage",
+        "command": "extension.uninstallPackageFromContext",
+        "title": "Uninstall Package"
+      },
+      {
+        "command": "extension.uninstallPackages",
         "title": "Uninstall Packages"
       }
     ]
@@ -49,16 +58,14 @@
     "release": "release-it"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.96.0",
-    "@typescript-eslint/eslint-plugin": "^8.17.0",
-    "@typescript-eslint/parser": "^8.17.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^3.2.1",
     "esbuild": "^0.24.0",
-    "eslint": "^9.16.0",
     "npm-run-all": "^4.1.5",
     "release-it": "^17.11.0",
     "typescript": "^5.7.2"
