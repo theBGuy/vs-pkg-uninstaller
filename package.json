@@ -2,12 +2,18 @@
   "name": "pkguninstaller",
   "displayName": "Pkg-Uninstaller",
   "description": "Quickly uninstall packages from your package.json using the context menu.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "engines": {
     "vscode": "^1.96.0"
   },
-  "categories": ["Programming Languages", "Linters"],
-  "activationEvents": ["onLanguage:json", "onStartupFinished"],
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "menus": {
@@ -76,7 +82,17 @@
     "release-it": "^17.11.0",
     "typescript": "^5.7.2"
   },
-  "keywords": ["uninstall", "npm", "packages", "yarn", "pnpm", "bun", "package.json", "dependencies", "utility"],
+  "keywords": [
+    "uninstall",
+    "npm",
+    "packages",
+    "yarn",
+    "pnpm",
+    "bun",
+    "package.json",
+    "dependencies",
+    "utility"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/theBGuy/vs-pkg-uninstaller"
