@@ -21,10 +21,19 @@ Alternatively, you can install it via the [Marketplace](https://marketplace.visu
 
 ## Usage
 
+### Uninstall a Single Package
+
 1. Open your `package.json` file in VS Code.
-2. Right-click on the package name (or dependencies) you want to uninstall in the editor.
+2. Right-click on the package name you want to uninstall in the editor.
+3. Select **Uninstall Package** from the context menu.
+
+### Uninstall Multiple Packages
+
+1. Open your `package.json` file in VS Code.
+2. Right-click anywhere in the editor.
 3. Select **Uninstall Packages** from the context menu.
-4. If multiple packages are selected, they will all be uninstalled at once.
+4. Choose the packages you want to uninstall from the quick pick list.
+5. The selected packages will be uninstalled at once.
 
 ## Supported Package Managers
 
@@ -37,7 +46,8 @@ The extension automatically detects which package manager you're using based on 
 
 ## Commands
 
-- **Uninstall Packages**: Right-click any installed package in the `package.json` and choose this option to uninstall it.
+- **Uninstall Package**: Right-click any installed package in the `package.json` and choose this option to uninstall it.
+- **Uninstall Packages**: Right-click anywhere in the `package.json` and choose this option to uninstall multiple packages.
 
 ## Development
 

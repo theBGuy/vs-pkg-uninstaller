@@ -6,17 +6,21 @@
   "engines": {
     "vscode": "^1.96.0"
   },
-  "categories": [
-    "Programming Languages",
-    "Linters"
-  ],
-  "activationEvents": [
-    "onLanguage:json",
-    "onStartupFinished"
-  ],
+  "categories": ["Programming Languages", "Linters"],
+  "activationEvents": ["onLanguage:json", "onStartupFinished"],
   "main": "./dist/extension.js",
   "contributes": {
     "menus": {
+      "commandPalette": [
+        {
+          "command": "extension.uninstallPackageFromContext",
+          "when": "false"
+        },
+        {
+          "command": "extension.uninstallPackages",
+          "when": "resourceLangId == json && editorLangId == json"
+        }
+      ],
       "editor/context": [
         {
           "command": "extension.uninstallPackageFromContext",
@@ -33,11 +37,13 @@
     "commands": [
       {
         "command": "extension.uninstallPackageFromContext",
-        "title": "Uninstall Package"
+        "title": "Uninstall Package",
+        "category": "Pkg-Uninstaller"
       },
       {
         "command": "extension.uninstallPackages",
-        "title": "Uninstall Packages"
+        "title": "Uninstall Packages",
+        "category": "Pkg-Uninstaller"
       }
     ]
   },
@@ -70,15 +76,7 @@
     "release-it": "^17.11.0",
     "typescript": "^5.7.2"
   },
-  "keywords": [
-    "uninstall",
-    "npm",
-    "packages",
-    "yarn",
-    "pnpm",
-    "package.json",
-    "dependencies"
-  ],
+  "keywords": ["uninstall", "npm", "packages", "yarn", "pnpm", "bun", "package.json", "dependencies", "utility"],
   "repository": {
     "type": "git",
     "url": "https://github.com/theBGuy/vs-pkg-uninstaller"
