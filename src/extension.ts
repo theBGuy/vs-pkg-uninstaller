@@ -73,6 +73,11 @@ function getUninstallCommand(packageManager: PackageManager) {
 async function uninstallPackages(packageNames: string[], packageManager: PackageManager, cwd: string) {
   const managerRemoveCmd = getUninstallCommand(packageManager);
 
+  if (!fs.existsSync(path.join(cwd, "package.json"))) {
+    vscode.window.showErrorMessage(`No package.json found in ${cwd}. Cannot uninstall packages.`);
+    return;
+  }
+
   await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -104,6 +109,25 @@ async function uninstallPackages(packageNames: string[], packageManager: Package
   vscode.window.showInformationMessage(`Selected packages uninstalled successfully. ${packageNames.join(", ")}`);
 }
 
+function getPackageJsonDirectory(filePath: string): string {
+  return path.dirname(filePath);
+}
+
+function getWorkspaceRoot(): string | undefined {
+  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+}
+
+function determinePackageManager(packageJsonDir: string, workspaceRoot?: string): PackageManager | undefined {
+  let packageManager = detectPackageManager(packageJsonDir);
+
+  // If not found and we have a workspace root different from package.json dir, try workspace root
+  if (!packageManager && workspaceRoot && workspaceRoot !== packageJsonDir) {
+    packageManager = detectPackageManager(workspaceRoot);
+  }
+
+  return packageManager;
+}
+
 export function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand("extension.uninstallPackages", async () => {
     const editor = vscode.window.activeTextEditor;
@@ -124,32 +148,26 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      let monorepo = false;
-      const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-      const cwd = path.dirname(filePath);
+      const packageJsonDir = getPackageJsonDirectory(filePath);
+      const workspaceRoot = getWorkspaceRoot();
 
-      if (!workspaceFolder) {
+      if (!workspaceRoot) {
         vscode.window.showErrorMessage("No workspace folder found.");
         return;
       }
 
-      const packageManager = (() => {
-        const _pkgManager = detectPackageManager(cwd);
-        if (!_pkgManager) {
-          monorepo = true;
-          return detectPackageManager(workspaceFolder);
-        }
-        return _pkgManager;
-      })();
+      const packageManager = determinePackageManager(packageJsonDir, workspaceRoot);
 
       if (!packageManager) {
-        vscode.window.showErrorMessage("No package manager lock file found in the workspace.");
+        vscode.window.showErrorMessage(
+          "No package manager lock file found. Please ensure you have a package-lock.json, yarn.lock, pnpm-lock.yaml, or bun.lock file.",
+        );
         return;
       }
 
       const selectedPackages = await vscode.window.showQuickPick(allPackages, {
         canPickMany: true,
-        placeHolder: `Detected ${packageManager}. Select a package to uninstall`,
+        placeHolder: `Detected ${packageManager}. Select packages to uninstall`,
       });
 
       if (!selectedPackages || selectedPackages.length === 0) {
@@ -157,75 +175,52 @@ export function activate(context: vscode.ExtensionContext) {
       }
 
       const packageNames = selectedPackages.map((pkg) => pkg.split(": ")[1]);
-      const useDirectory = monorepo ? cwd : workspaceFolder;
 
-      await uninstallPackages(packageNames, packageManager, useDirectory);
+      await uninstallPackages(packageNames, packageManager, packageJsonDir);
     } catch (error) {
       console.error(error);
       vscode.window.showErrorMessage("Error parsing package.json.");
     }
   });
 
-  const contextDisposable = vscode.commands.registerCommand(
-    "extension.uninstallPackageFromContext",
-    async (uri: vscode.Uri) => {
-      const editor = vscode.window.activeTextEditor;
+  const contextDisposable = vscode.commands.registerCommand("extension.uninstallPackageFromContext", async () => {
+    const editor = vscode.window.activeTextEditor;
 
-      if (!editor || !editor.document.fileName.endsWith("package.json")) {
-        vscode.window.showErrorMessage("Please open a package.json file.");
-        return;
-      }
+    if (!editor || !editor.document.fileName.endsWith("package.json")) {
+      vscode.window.showErrorMessage("Please open a package.json file.");
+      return;
+    }
 
-      const filePath = editor.document.fileName;
-      const fileContent = fs.readFileSync(filePath, "utf8");
+    const filePath = editor.document.fileName;
+    const packageJsonDir = getPackageJsonDirectory(filePath);
+    const workspaceRoot = getWorkspaceRoot();
 
-      try {
-        const allPackages = parsePackageJson(fileContent);
+    if (!workspaceRoot) {
+      vscode.window.showErrorMessage("No workspace folder found.");
+      return;
+    }
 
-        if (allPackages.length === 0) {
-          vscode.window.showInformationMessage("No packages to uninstall.");
-          return;
-        }
+    const packageManager = determinePackageManager(packageJsonDir, workspaceRoot);
 
-        const position = editor.selection.active;
-        const wordRange = editor.document.getWordRangeAtPosition(position, /"[^"]+"/);
-        if (!wordRange) {
-          vscode.window.showErrorMessage("Please right-click on a package name.");
-          return;
-        }
+    if (!packageManager) {
+      vscode.window.showErrorMessage(
+        "No package manager lock file found. Please ensure you have a package-lock.json, yarn.lock, pnpm-lock.yaml, or bun.lock file.",
+      );
+      return;
+    }
 
-        let monorepo = false;
-        const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-        const cwd = path.dirname(filePath);
-        const packageName = editor.document.getText(wordRange).replace(/"/g, "");
+    const position = editor.selection.active;
+    const wordRange = editor.document.getWordRangeAtPosition(position, /"[^"]+"/);
 
-        if (!workspaceFolder) {
-          vscode.window.showErrorMessage("No workspace folder found.");
-          return;
-        }
+    if (!wordRange) {
+      vscode.window.showErrorMessage("Please right-click on a package name.");
+      return;
+    }
 
-        const packageManager = (() => {
-          const _pkgManager = detectPackageManager(cwd);
-          if (!_pkgManager) {
-            monorepo = true;
-            return detectPackageManager(workspaceFolder);
-          }
-          return _pkgManager;
-        })();
+    const packageName = editor.document.getText(wordRange).replace(/"/g, "");
 
-        if (!packageManager) {
-          vscode.window.showErrorMessage("No package manager lock file found in the workspace.");
-          return;
-        }
-
-        const useDirectory = monorepo ? cwd : workspaceFolder;
-        await uninstallPackages([packageName], packageManager, useDirectory);
-      } catch (error) {
-        console.error(error);
-        vscode.window.showErrorMessage("Error parsing package.json.");
-      }
-    },
-  );
+    await uninstallPackages([packageName], packageManager, packageJsonDir);
+  });
 
   context.subscriptions.push(disposable);
   context.subscriptions.push(contextDisposable);
