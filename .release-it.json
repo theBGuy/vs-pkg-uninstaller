@@ -9,5 +9,14 @@
   "git": {
     "changelog": "git log --pretty=format:\"* %s (%h)\" ${from}...${to}",
     "push": true
+  },
+  "hooks": {
+    "before:init": ["npm run lint", "npm run test"],
+    "before:git:release": "npm run build",
+    "after:git:release": "npm run publish",
+    "after:release": [
+      "echo Successfully released ${name} v${version} to ${repo.repository}.",
+      "node scripts/cleanup.js"
+    ]
   }
 }
