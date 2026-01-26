@@ -36,6 +36,8 @@ version-resolver:
 
 exclude-labels:
   - 'skip-changelog'
+  - 'chore'
+  - 'skip-release'
 
 autolabeler:
   - label: 'patch'
