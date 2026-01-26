@@ -6,8 +6,14 @@
   "engines": {
     "vscode": "^1.96.0"
   },
-  "categories": ["Programming Languages", "Linters"],
-  "activationEvents": ["onLanguage:json", "onStartupFinished"],
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "onStartupFinished"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "menus": {
@@ -48,36 +54,47 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run package",
-    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "vscode:prepublish": "pnpm package",
+    "compile": "pnpm check-types && pnpm lint && node esbuild.js",
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "package": "pnpm check-types && pnpm lint && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "pretest": "pnpm compile-tests && pnpm compile && pnpm lint",
     "check-types": "tsc --noEmit",
     "lint": "biome check --write ./src/",
+    "lint:check": "biome check ./src/",
     "test": "vscode-test",
     "build": "vsce package",
     "publish": "vsce publish",
     "release": "release-it"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
+    "@biomejs/biome": "2.3.12",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.96.0",
     "@vscode/test-cli": "^0.0.11",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.5.0",
-    "esbuild": "^0.25.0",
+    "esbuild": "^0.27.2",
     "npm-run-all": "^4.1.5",
     "release-it": "^17.11.0",
     "typescript": "^5.7.2"
   },
-  "keywords": ["uninstall", "npm", "packages", "yarn", "pnpm", "bun", "package.json", "dependencies", "utility"],
+  "keywords": [
+    "uninstall",
+    "npm",
+    "packages",
+    "yarn",
+    "pnpm",
+    "bun",
+    "package.json",
+    "dependencies",
+    "utility"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/theBGuy/vs-pkg-uninstaller"
@@ -85,5 +102,6 @@
   "author": "theBGuy <theBGuy.github@gmail.com>",
   "publisher": "theBGuy",
   "license": "MIT",
-  "icon": "logo.png"
+  "icon": "logo.png",
+  "packageManager": "pnpm@10.28.0+sha512.05df71d1421f21399e053fde567cea34d446fa02c76571441bfc1c7956e98e363088982d940465fd34480d4d90a0668bc12362f8aa88000a64e83d0b0e47be48"
 }

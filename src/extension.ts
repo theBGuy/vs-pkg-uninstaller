@@ -89,7 +89,7 @@ async function uninstallPackages(packageNames: string[], packageManager: Package
         const uninstallCommand = `${managerRemoveCmd} ${packageName}`;
 
         await new Promise<void>((resolve, reject) => {
-          exec(uninstallCommand, { cwd }, (err, stdout, stderr) => {
+          exec(uninstallCommand, { cwd }, (err, _stdout, stderr) => {
             if (err) {
               vscode.window.showErrorMessage(`Error uninstalling ${packageName}: ${stderr}`);
               reject(err);

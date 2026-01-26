@@ -60,15 +60,15 @@ To contribute to **Pkg-Uninstaller**, clone this repository and follow these ste
 
 2. Install dependencies:
     ```bash
-    npm install
+    pnpm install
     ```
 3. Compile the TypeScript code:
     ```bash
-    npm run compile
+    pnpm run compile
     ```
 4. Test your changes:
     ```bash
-    npm test
+    pnpm test
     ```
 
 ## License

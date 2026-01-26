@@ -18,6 +18,10 @@
   "editor.codeActionsOnSave": {
     "source.organizeImports.biome": "explicit",
     "source.removeUnusedImports": "always",
-    "quickfix.biome": "explicit"
+    "source.fixAll.biome": "explicit",
+    "source.biome": "explicit"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
   }
 }

@@ -1,0 +1,56 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+template: |
+  ## Changes
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+categories:
+  - title: 'Breaking Changes'
+    labels:
+      - 'major'
+  - title: 'New Features'
+    labels:
+      - 'minor'
+  - title: 'Bug Fixes'
+    labels:
+      - 'patch'
+  - title: 'Pre-release'
+    labels:
+      - 'pre-release'
+
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+
+exclude-labels:
+  - 'skip-changelog'
+  - 'chore'
+  - 'skip-release'
+
+autolabeler:
+  - label: 'patch'
+    title:
+      - '/^fix/i'
+      - '/^patch/i'
+      - '/^bug/i'
+  - label: 'minor'
+    title:
+      - '/^feat/i'
+      - '/^feature/i'
+      - '/^add/i'
+  - label: 'major'
+    title:
+      - '/^breaking/i'
+      - '/BREAKING/i'
