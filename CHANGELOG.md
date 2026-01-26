@@ -6,4 +6,14 @@ Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how 
 
 ## [Unreleased]
 
-- Initial release
+## [0.0.8] - 2026-01-26
+
+### Fixed
+- Security: Fixed command injection vulnerability by using `execFile` instead of `exec`
+- Fixed progress increment calculation
+- Context menu now validates selection is actually a dependency
+
+### Changed
+- Batch uninstalls into single command for better performance
+- Use `editor.document.getText()` instead of `fs.readFileSync()` for reading open files
+- Improved cancellation support with recovery option to run install command
