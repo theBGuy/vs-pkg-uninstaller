@@ -259,8 +259,7 @@ suite("Extension Tests", () => {
       // Verify package content
       const uiPackageContent = JSON.parse(fs.readFileSync(path.join(uiPackagePath, "package.json"), "utf8"));
       assert.strictEqual(uiPackageContent.name, "@test/ui");
-      // biome-ignore lint/complexity/useLiteralKeys: <explanation>
-      assert.ok(uiPackageContent.dependencies["react"]);
+      assert.ok(uiPackageContent.dependencies.react);
       assert.ok(uiPackageContent.dependencies["@test/utils"]);
     });
 
