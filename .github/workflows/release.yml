@@ -94,7 +94,7 @@ jobs:
 
       - name: Publish to VS Code Marketplace
         if: inputs.dry_run != true
-        run: pnpm publish
+        run: npx vsce publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
