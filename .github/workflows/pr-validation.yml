@@ -1,0 +1,64 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [master]
+    types: [opened, synchronize, labeled, unlabeled]
+
+jobs:
+  check-labels:
+    name: Check semver label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR has exactly one semver label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const validLabels = ['major', 'minor', 'patch', 'pre-release'];
+            const prLabels = context.payload.pull_request.labels.map(l => l.name);
+            const semverLabels = prLabels.filter(l => validLabels.includes(l));
+
+            if (semverLabels.length === 0) {
+              core.setFailed('PR must have one semver label: major, minor, patch, or pre-release');
+            } else if (semverLabels.length > 1) {
+              core.setFailed(`PR has multiple semver labels (${semverLabels.join(', ')}). Please use only one.`);
+            } else {
+              console.log(`PR has valid semver label: ${semverLabels[0]}`);
+            }
+
+  validate:
+    name: Validate (${{ matrix.os }})
+    needs: check-labels
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm check-types
+
+      - name: Lint
+        run: pnpm lint:check
+
+      - name: Test (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a pnpm test
+
+      - name: Test (non-Linux)
+        if: runner.os != 'Linux'
+        run: pnpm test
