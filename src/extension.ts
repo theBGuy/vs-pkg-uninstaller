@@ -1,10 +1,16 @@
-import { exec } from "node:child_process";
+import { execFile } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 
 type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
 type Dependencies = { [key: string]: string };
+type DependencyType = "dependency" | "devDependency" | "optionalDependency" | "peerDependency";
+
+interface PackageInfo {
+  name: string;
+  type: DependencyType;
+}
 
 interface PackageJson {
   name?: string;
@@ -38,75 +44,112 @@ function detectPackageManager(workspaceFolder: string): PackageManager | undefin
   return undefined;
 }
 
-function fmtDeps(deps?: Dependencies) {
+function fmtDeps(deps: Dependencies | undefined, type: DependencyType): PackageInfo[] {
   if (!deps) {
     return [];
   }
-  return Object.keys(deps).filter((pkg) => !deps[pkg].includes("workspace:"));
+  return Object.keys(deps)
+    .filter((pkg) => !deps[pkg]?.includes("workspace:"))
+    .map((name) => ({ name, type }));
 }
 
-function parsePackageJson(fileContent: string) {
+function parsePackageJson(fileContent: string): PackageInfo[] {
   const packageJson: PackageJson = JSON.parse(fileContent);
-  const dependencies = fmtDeps(packageJson.dependencies);
-  const devDependencies = fmtDeps(packageJson.devDependencies);
-  const optionalDependencies = fmtDeps(packageJson.optionalDependencies);
-  const peerDependencies = fmtDeps(packageJson.peerDependencies);
-  const allPackages = [
-    ...dependencies.map((pkg) => `dependency: ${pkg}`),
-    ...devDependencies.map((pkg) => `devDependency: ${pkg}`),
-    ...optionalDependencies.map((pkg) => `optionalDependency: ${pkg}`),
-    ...peerDependencies.map((pkg) => `peerDependency: ${pkg}`),
+  return [
+    ...fmtDeps(packageJson.dependencies, "dependency"),
+    ...fmtDeps(packageJson.devDependencies, "devDependency"),
+    ...fmtDeps(packageJson.optionalDependencies, "optionalDependency"),
+    ...fmtDeps(packageJson.peerDependencies, "peerDependency"),
   ];
-  return allPackages;
 }
 
-function getUninstallCommand(packageManager: PackageManager) {
-  return packageManager === "yarn"
-    ? "yarn remove"
-    : packageManager === "pnpm"
-      ? "pnpm remove"
-      : packageManager === "bun"
-        ? "bun remove"
-        : "npm uninstall";
+function getAllDependencyNames(fileContent: string): Set<string> {
+  const packageJson: PackageJson = JSON.parse(fileContent);
+  const allDeps = new Set<string>();
+  for (const deps of [
+    packageJson.dependencies,
+    packageJson.devDependencies,
+    packageJson.optionalDependencies,
+    packageJson.peerDependencies,
+  ]) {
+    if (deps) {
+      for (const name of Object.keys(deps)) {
+        allDeps.add(name);
+      }
+    }
+  }
+  return allDeps;
 }
 
-async function uninstallPackages(packageNames: string[], packageManager: PackageManager, cwd: string) {
-  const managerRemoveCmd = getUninstallCommand(packageManager);
+interface UninstallCommand {
+  cmd: string;
+  args: string[];
+}
+
+function getUninstallCommand(packageManager: PackageManager): UninstallCommand {
+  switch (packageManager) {
+    case "yarn":
+      return { cmd: "yarn", args: ["remove"] };
+    case "pnpm":
+      return { cmd: "pnpm", args: ["remove"] };
+    case "bun":
+      return { cmd: "bun", args: ["remove"] };
+    default:
+      return { cmd: "npm", args: ["uninstall"] };
+  }
+}
+
+function getInstallCommand(packageManager: PackageManager): string {
+  return `${packageManager} install`;
+}
+
+async function uninstallPackages(
+  packageNames: string[],
+  packageManager: PackageManager,
+  cwd: string,
+  token: vscode.CancellationToken,
+): Promise<boolean> {
+  const { cmd, args } = getUninstallCommand(packageManager);
 
   if (!fs.existsSync(path.join(cwd, "package.json"))) {
     vscode.window.showErrorMessage(`No package.json found in ${cwd}. Cannot uninstall packages.`);
-    return;
+    return false;
   }
 
-  await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: "Uninstalling packages",
-      cancellable: false,
-    },
-    async (progress) => {
-      for (const [index, packageName] of packageNames.entries()) {
-        const uninstallCommand = `${managerRemoveCmd} ${packageName}`;
+  let wasCancelled = false;
 
-        await new Promise<void>((resolve, reject) => {
-          exec(uninstallCommand, { cwd }, (err, _stdout, stderr) => {
-            if (err) {
-              vscode.window.showErrorMessage(`Error uninstalling ${packageName}: ${stderr}`);
-              reject(err);
-            } else {
-              progress.report({
-                increment: (index + 1) * (100 / packageNames.length),
-                message: `Uninstalled ${packageName}`,
-              });
-              resolve();
-            }
-          });
-        });
+  return new Promise((resolve) => {
+    const childProcess = execFile(cmd, [...args, ...packageNames], { cwd, shell: true }, (err, _stdout, stderr) => {
+      if (wasCancelled) {
+        // Don't show error if user cancelled - they already got the warning
+        resolve(false);
+        return;
       }
-    },
-  );
+      if (err) {
+        vscode.window.showErrorMessage(`Error uninstalling packages: ${stderr || err.message}`);
+        resolve(false);
+      } else {
+        vscode.window.showInformationMessage(`Successfully uninstalled: ${packageNames.join(", ")}`);
+        resolve(true);
+      }
+    });
 
-  vscode.window.showInformationMessage(`Selected packages uninstalled successfully. ${packageNames.join(", ")}`);
+    token.onCancellationRequested(() => {
+      wasCancelled = true;
+      childProcess.kill();
+      const installCmd = getInstallCommand(packageManager);
+      vscode.window
+        .showWarningMessage("Uninstall cancelled. Your project may be in an inconsistent state.", `Run ${installCmd}`)
+        .then((selection) => {
+          if (selection) {
+            const terminal = vscode.window.createTerminal("Package Recovery");
+            terminal.show();
+            terminal.sendText(`cd "${cwd}" && ${installCmd}`);
+          }
+        });
+      resolve(false);
+    });
+  });
 }
 
 function getPackageJsonDirectory(filePath: string): string {
@@ -138,7 +181,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     const filePath = editor.document.fileName;
-    const fileContent = fs.readFileSync(filePath, "utf8");
+    const fileContent = editor.document.getText();
 
     try {
       const allPackages = parsePackageJson(fileContent);
@@ -165,18 +208,33 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      const selectedPackages = await vscode.window.showQuickPick(allPackages, {
+      const quickPickItems = allPackages.map((pkg) => ({
+        label: pkg.name,
+        description: pkg.type,
+        pkg,
+      }));
+
+      const selectedItems = await vscode.window.showQuickPick(quickPickItems, {
         canPickMany: true,
         placeHolder: `Detected ${packageManager}. Select packages to uninstall`,
       });
 
-      if (!selectedPackages || selectedPackages.length === 0) {
+      if (!selectedItems || selectedItems.length === 0) {
         return;
       }
 
-      const packageNames = selectedPackages.map((pkg) => pkg.split(": ")[1]);
+      const packageNames = selectedItems.map((item) => item.pkg.name);
 
-      await uninstallPackages(packageNames, packageManager, packageJsonDir);
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `Uninstalling ${packageNames.length} package(s)...`,
+          cancellable: true,
+        },
+        async (_progress, token) => {
+          await uninstallPackages(packageNames, packageManager, packageJsonDir, token);
+        },
+      );
     } catch (error) {
       console.error(error);
       vscode.window.showErrorMessage("Error parsing package.json.");
@@ -192,6 +250,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
 
     const filePath = editor.document.fileName;
+    const fileContent = editor.document.getText();
     const packageJsonDir = getPackageJsonDirectory(filePath);
     const workspaceRoot = getWorkspaceRoot();
 
@@ -219,7 +278,23 @@ export function activate(context: vscode.ExtensionContext) {
 
     const packageName = editor.document.getText(wordRange).replace(/"/g, "");
 
-    await uninstallPackages([packageName], packageManager, packageJsonDir);
+    // Validate that the selected text is actually a dependency
+    const validDependencies = getAllDependencyNames(fileContent);
+    if (!validDependencies.has(packageName)) {
+      vscode.window.showErrorMessage(`"${packageName}" is not a dependency in this package.json.`);
+      return;
+    }
+
+    await vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: `Uninstalling ${packageName}...`,
+        cancellable: true,
+      },
+      async (_progress, token) => {
+        await uninstallPackages([packageName], packageManager, packageJsonDir, token);
+      },
+    );
   });
 
   context.subscriptions.push(disposable);

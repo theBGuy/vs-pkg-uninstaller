@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm check-types:*)",
+      "Bash(pnpm lint:check:*)"
+    ]
+  }
+}
