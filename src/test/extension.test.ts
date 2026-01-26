@@ -34,14 +34,6 @@ suite("Extension Tests", () => {
     assert.strictEqual(commandExists, true, "Command 'extension.uninstallPackages' is not registered");
   });
 
-  // test("Package.json can be parsed", async () => {
-  //   const packageJsonPath = path.join(workspacePath, "package.json");
-  //   assert.strictEqual(fs.existsSync(packageJsonPath), true, "package.json file does not exist in the workspace");
-
-  //   const fileContent = fs.readFileSync(packageJsonPath, "utf8");
-  //   assert.doesNotThrow(() => JSON.parse(fileContent), "Failed to parse package.json");
-  // });
-
   suite("Monorepo Tests", () => {
     const testMonorepoPath = path.join(workspacePath, "test-monorepo");
     const packagesPath = path.join(testMonorepoPath, "packages");
