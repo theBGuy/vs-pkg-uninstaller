@@ -1,14 +1,38 @@
+# Source files (only dist/ is needed)
+src/**
+out/**
+**/*.ts
+**/*.map
+
+# Config files
+.release-it.json
+biome.jsonc
+tsconfig.json
+esbuild.js
+.vscode-test.mjs
+vsc-extension-quickstart.md
+**/.vscode-test.*
+**/eslint.config.mjs
+
+# Package manager files
+pnpm-lock.yaml
+pnpm-workspace.yaml
+node_modules/**
+.yarnrc
+
+# Git and CI files
+.git/**
+.gitignore
+.gitattributes
+.github/**
+
+# IDE and tool files
 .vscode/**
 .vscode-test/**
-out/**
-node_modules/**
-src/**
-.gitignore
-.yarnrc
-esbuild.js
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/eslint.config.mjs
-**/*.map
-**/*.ts
-**/.vscode-test.*
+.claude/**
+
+# Build artifacts
+*.vsix
+
+# Scripts
+scripts/**
