@@ -60,28 +60,40 @@ jobs:
         run: npm version ${{ steps.version.outputs.version }} --no-git-tag-version
 
       - name: Update changelog
-        if: github.event_name == 'release'
+        if: inputs.dry_run != true
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const version = '${{ steps.version.outputs.version }}';
-            const releaseBody = process.env.RELEASE_BODY;
+            const releaseBody = process.env.RELEASE_BODY || 'Release version ' + version;
             const date = new Date().toISOString().split('T')[0];
 
             const changelogPath = 'CHANGELOG.md';
             let changelog = fs.readFileSync(changelogPath, 'utf8');
 
-            const newEntry = `## [${version}] - ${date}\n\n${releaseBody}\n\n`;
+            const newEntry = `## [${version}] - ${date}\n\n${releaseBody}\n`;
 
-            // Insert after "## [Unreleased]" section
-            const unreleasedRegex = /(## \[Unreleased\].*?\n\n)/s;
-            if (changelog.match(unreleasedRegex)) {
-              changelog = changelog.replace(unreleasedRegex, `$1${newEntry}`);
+            // Find the Unreleased section and insert after it (before the next ## section or end)
+            const unreleasedMatch = changelog.match(/## \[Unreleased\][^\n]*\n/);
+            if (unreleasedMatch) {
+              const insertPos = unreleasedMatch.index + unreleasedMatch[0].length;
+              // Skip any content until the next ## section or end of file
+              const restOfFile = changelog.slice(insertPos);
+              const nextSectionMatch = restOfFile.match(/\n## \[/);
+
+              if (nextSectionMatch) {
+                // Insert before the next version section
+                const nextSectionPos = insertPos + nextSectionMatch.index + 1;
+                changelog = changelog.slice(0, nextSectionPos) + newEntry + '\n' + changelog.slice(nextSectionPos);
+              } else {
+                // No other sections, append after Unreleased
+                changelog = changelog.slice(0, insertPos) + '\n' + newEntry + restOfFile.trim();
+              }
             } else {
-              // If no Unreleased section, add after the header
+              // No Unreleased section, add after the header
               const headerEnd = changelog.indexOf('\n\n') + 2;
-              changelog = changelog.slice(0, headerEnd) + newEntry + changelog.slice(headerEnd);
+              changelog = changelog.slice(0, headerEnd) + newEntry + '\n' + changelog.slice(headerEnd);
             }
 
             fs.writeFileSync(changelogPath, changelog);
@@ -99,7 +111,7 @@ jobs:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
       - name: Commit and push changes
-        if: github.event_name == 'release'
+        if: inputs.dry_run != true
         run: |
           git add package.json CHANGELOG.md
           git commit -m "chore: release v${{ steps.version.outputs.version }}"
